@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>DiagnosticsAndRecoveries</ID>
+      <Version>1.0.0.17</Version>
+    </Identity>
+    <Name>F12 HR Application</Name>
+    <References>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="F12.HR.AppServer" Base="Windows!Microsoft.Windows.ComputerRole" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="Version" Key="false" Type="string" />
+        </ClassType>
+      </ClassTypes>
+    </EntityTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="F12.HR.AppServer.Discovery" Target="Windows!Microsoft.Windows.Server.OperatingSystem" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="F12.HR.AppServer" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <!-- 
+PathType - Integer
+  Specifies whether the path is a key or a value.
+  • 0—Specifies that the path is to a key, for which the existence of the key should be checked.
+  • 1—Specifies that the path is to a value that should be retrieved.
+
+AttributeType -   Integer
+  The data type of the value to return:
+  • 0—Boolean
+  • 1—String
+  • 2—Integer
+  • 3—Float
+Values 1, 2, and 3 are used only when the PathType is set to 1.
+-->
+              <AttributeName>SeedExists</AttributeName>
+              <Path>SOFTWARE\SCOMDiscoveryData\HR</Path>
+              <PathType>0</PathType>
+              <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Version</AttributeName>
+              <Path>SOFTWARE\SCOMDiscoveryData\HR\Version</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>3600</Frequency>
+          <ClassId>$MPElement[Name="F12.HR.AppServer"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="F12.HR.AppServer"]/Version$</Name>
+                <Value>$Data/Values/Version$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Values/SeedExists</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">True</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="F12.HR.Monitor.NTEvent.2State.880" Accessibility="Public" Enabled="true" Target="F12.HR.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.2SingleEventLog2StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="F12.HR.Monitor.NTEvent.2State.880.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/EventDescription$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="FirstEventRaised" MonitorTypeStateID="FirstEventRaised" HealthState="Error" />
+          <OperationalState ID="SecondEventRaised" MonitorTypeStateID="SecondEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <FirstComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</FirstComputerName>
+          <FirstLogName>Application</FirstLogName>
+          <FirstExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">EventCreate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">1</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">880</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </FirstExpression>
+          <SecondComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</SecondComputerName>
+          <SecondLogName>Application</SecondLogName>
+          <SecondExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">881</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">EventCreate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">0</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </SecondExpression>
+        </Configuration>
+      </UnitMonitor>
+      <UnitMonitor ID="F12.HR.Monitor.NTEvent.2State.980" Accessibility="Public" Enabled="true" Target="F12.HR.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.2SingleEventLog2StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="F12.HR.Monitor.NTEvent.2State.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/EventDescription$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="FirstEventRaised" MonitorTypeStateID="FirstEventRaised" HealthState="Error" />
+          <OperationalState ID="SecondEventRaised" MonitorTypeStateID="SecondEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <FirstComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</FirstComputerName>
+          <FirstLogName>Application</FirstLogName>
+          <FirstExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">EventCreate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">1</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">980</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </FirstExpression>
+          <SecondComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</SecondComputerName>
+          <SecondLogName>Application</SecondLogName>
+          <SecondExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">981</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">EventCreate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">0</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </SecondExpression>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+    <Diagnostics>
+      <Diagnostic ID="F12.HR.Diagnostic.CmdExec.TaskList" Target="F12.HR.AppServer" Accessibility="Public" Enabled="true" Monitor="F12.HR.Monitor.NTEvent.2State.880" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Maintenance</Category>
+        <ProbeAction ID="Command" TypeID="System!System.CommandExecuterProbe">
+          <ApplicationName>%windir%\system32\tasklist.exe</ApplicationName>
+          <WorkingDirectory />
+          <CommandLine />
+          <TimeoutSeconds>15</TimeoutSeconds>
+          <RequireOutput>true</RequireOutput>
+        </ProbeAction>
+      </Diagnostic>
+      <Diagnostic ID="F12.HR.AppServer.Diagnostic.PowerShell" Target="F12.HR.AppServer" Accessibility="Public" Enabled="true" Monitor="F12.HR.Monitor.NTEvent.2State.980" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Maintenance</Category>
+        <!-- Please fill in the type of the probe action module.
+             Without a ConditionDetection, the ProbeAction always executes.
+             The output of the probe action will be shown in the 
+             Health Explorer detail pane. -->
+        <ProbeAction ID="PA" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+          <ScriptName>DiagnosticPowerShell.ps1</ScriptName>
+          <ScriptBody><![CDATA[if ([System.Diagnostics.EventLog]::SourceExists("Diagnostic PowerShell") -eq $False) {
+    New-EventLog -LogName "Visual Studio Builds" -Source "Diagnostic PowerShell"
+	}
+
+Write-EventLog -LogName Application -Source "Diagnostic PowerShell" -EntryType Information -EventID 1234 -Message "Diagnostic Has Completed"]]></ScriptBody>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </ProbeAction>
+      </Diagnostic>
+    </Diagnostics>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="F12.HR.Monitor.NTEvent.2State.880.AlertMessage" />
+      <StringResource ID="F12.HR.Monitor.NTEvent.2State.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="F12.HR.AppServer">
+          <Name>F12 HR Application Server</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.AppServer" SubElementID="Version">
+          <Name>Version</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.AppServer.Discovery">
+          <Name>Discover F12 HR Application Server</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
+        <DisplayString ElementID="DiagnosticsAndRecoveries">
+          <Name>F12 HR Application Management Pack</Name>
+          <Description>Management Pack Examples for Diagnostics and Recoveries</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880.AlertMessage">
+          <Name>Alert Name - Single Event Log Timer 2 State Monitor</Name>
+          <Description>{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880" SubElementID="FirstEventRaised">
+          <Name>FirstEventRaised</Name>
+          <Description>FirstEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880" SubElementID="SecondEventRaised">
+          <Name>SecondEventRaised</Name>
+          <Description>SecondEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880">
+          <Name>Monitor for Event 880</Name>
+          <Description>SecondEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Diagnostic.CmdExec.TaskList">
+          <Name>Task List</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.AlertMessage">
+          <Name>Alert Name - Single Event Log Timer 2 State Monitor</Name>
+          <Description>{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.980" SubElementID="FirstEventRaised">
+          <Name>FirstEventRaised</Name>
+          <Description>FirstEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.980" SubElementID="SecondEventRaised">
+          <Name>SecondEventRaised</Name>
+          <Description>SecondEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.980">
+          <Name>Monitor for Event 980</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.AppServer.Diagnostic.PowerShell">
+          <Name>Run PowerShell Script</Name>
+          <Description></Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

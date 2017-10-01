@@ -1,0 +1,27 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Monitoring>
+    <Diagnostics>
+      <Diagnostic ID="F12.HR.Diagnostic.CmdExec.TaskList" Target="F12.HR.AppServer" Accessibility="Public" Enabled="true" Monitor="F12.HR.Monitor.NTEvent.2State.880" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Maintenance</Category>
+
+        <ProbeAction ID="Command" TypeID="System!System.CommandExecuterProbe">
+          <ApplicationName><![CDATA[%windir%\system32\tasklist.exe]]></ApplicationName>
+          <WorkingDirectory />
+          <CommandLine />
+          <TimeoutSeconds>15</TimeoutSeconds>
+          <RequireOutput>true</RequireOutput>
+        </ProbeAction>
+      </Diagnostic>
+    </Diagnostics>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="F12.HR.Diagnostic.CmdExec.TaskList">
+          <Name>Task List</Name>
+          <Description></Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

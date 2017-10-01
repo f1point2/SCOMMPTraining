@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <ProjectGuid>{d52a08e3-512b-4c3d-ad82-384f6a6d2b9e}</ProjectGuid>
-    <RootNamespace>DiagnosticsAndRecoveries</RootNamespace>
-    <Name>DiagnosticsAndRecoveries</Name>
+    <RootNamespace>F12.HR.Application</RootNamespace>
+    <Name>F12 HR Application</Name>
     <ManagementPackName>DiagnosticsAndRecoveries</ManagementPackName>
     <Version>1.0.0.0</Version>
     <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
@@ -13,12 +13,12 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>bin\Debug\</OutputPath>
-    <GenerateSealed>false</GenerateSealed>
-    <Company>MyCompany</Company>
-    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
-    <DelaySigning>false</DelaySigning>
-    <AssemblyOriginatorKeyFile />
+    <OutputPath>..\DiagnosticsAndRecoveries\ManagementPackOutput</OutputPath>
+    <GenerateSealed>True</GenerateSealed>
+    <Company>F1Point2</Company>
+    <Copyright>Copyright (c) F1Point2. All rights reserved.</Copyright>
+    <DelaySigning>False</DelaySigning>
+    <AssemblyOriginatorKeyFile>..\DiagnosticsAndRecoveries\F12Key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -50,6 +50,36 @@
       <Alias>Visualization</Alias>
       <PackageToBundle>false</PackageToBundle>
     </ManagementPackReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ApplicationClassAndDiscovery\ApplicationClassAndDiscovery.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\DiagnosticCommandExecuterProbe\1_2StateNTEventLog_Monitor.880.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\DiagnosticCommandExecuterProbe\2_Diagnostic_CommandExecuterProbe.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\DiagnosticPowerShell\1_2State_NTEventLog_Monitor_980.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\DiagnosticPowerShell\2_Diagnostic.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ApplicationClassAndDiscovery" />
+    <Folder Include="Monitoring" />
+    <Folder Include="Monitoring\Monitors" />
+    <Folder Include="Monitoring\Monitors\DiagnosticCommandExecuterProbe" />
+    <Folder Include="Monitoring\Monitors\DiagnosticPowerShell" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Monitoring\Monitors\DiagnosticPowerShell\3_PShell.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
 </Project>
