@@ -1,0 +1,67 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Monitoring>
+    <Recoveries>
+
+      <!-- In this section, you must edit the Target and Monitor attributes to 
+           configure this Recovery to run. Optionally, you can change the recovery 
+           to execute on a diagnostic instead of a particular monitor state. 
+           More information can be found in the Management Pack Development Kit: 
+           http://msdn.microsoft.com/en-us/library/ee533697.aspx -->
+      <Recovery ID="F12.HR.RecoveryInResponseToDiagnostic" Target="F12.HR.AppServer" Monitor="F12.HR.Monitor.NTEvent.2State.380" Accessibility="Public" Enabled="true" ExecuteOnDiagnostic="F12.HR.Diagnostic.ReadRegistry" Remotable="true" ResetMonitor="false" Timeout="300">
+        <Category>Maintenance</Category>
+
+        <!-- Please fill in the type of the condition detection module 
+             or remove the ConditionDetection section. This can be used to
+             inspect the Monitor State, Data Item that caused the State Change,
+             or the Diagnostic ProbeAction Output (if the ExecuteOnDiagnostic
+             attribute is present). If this Condition Detection does not "pass"
+             the WriteAction will not be executed. -->
+        <ConditionDetection ID="CD" TypeID="System!System.ExpressionFilter">
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Diagnostic/DataItem/Property[@Name='Version']</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">1.2.3</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </ConditionDetection>
+
+        <!-- Please fill in the type of the write action module.
+             Without a ConditionDetection, the WriteAction always executes.
+             The output of the write action will be shown in the 
+             Health Explorer detail pane. -->
+        <WriteAction ID="WA" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+          <ScriptName>RecoveryWriteLog.ps1</ScriptName>
+          <ScriptBody>$IncludeFileContent/Monitoring/Monitors/DiagAndRecoveryRegistryRead\4_WriteEventLog.ps1$</ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>Version</Name>
+              <Value>$Data/Diagnostic/DataItem/Property[@Name='Version']$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+
+    </Recoveries>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+
+        <!-- The name of the Recovery will appear in the Health Explorer
+             detail pane. The user can manually click the Diagnostic to run
+             it again. -->
+        <DisplayString ElementID="F12.HR.RecoveryInResponseToDiagnostic">
+          <Name>Recovery In Response To Diagnostic</Name>
+          <Description></Description>
+        </DisplayString>
+
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

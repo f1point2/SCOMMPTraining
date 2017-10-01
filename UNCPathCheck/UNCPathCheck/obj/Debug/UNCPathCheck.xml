@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>UNCPathCheck</ID>
+      <Version>1.0.0.29</Version>
+    </Identity>
+    <Name>UNCPathCheck</Name>
+    <References>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="UNCPathCheck.SourceServer" Base="Windows!Microsoft.Windows.LocalApplication" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false" />
+      </ClassTypes>
+    </EntityTypes>
+    <SecureReferences>
+      <SecureReference ID="UNCPathCheck.RunAsProfile" Accessibility="Public" Context="System!System.Entity" />
+    </SecureReferences>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="UNCPathCheck.UNCPathCheck.SourceServer.Discovery" Target="Windows!Microsoft.Windows.Computer" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="UNCPathCheck.SourceServer" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <AttributeName>SeedExists</AttributeName>
+              <Path>SOFTWARE\SCOMDiscoveryData\UNCPathCheckSourceServer</Path>
+              <PathType>0</PathType>
+              <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>60</Frequency>
+          <ClassId>$MPElement[Name="UNCPathCheck.SourceServer"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                <Value>$Target/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Values/SeedExists</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">True</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath" Accessibility="Public" Enabled="true" Target="UNCPathCheck.SourceServer" ParentMonitorID="Health!System.Health.EntityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.TimedScript.TwoStateMonitorType" ConfirmDelivery="false" RunAs="UNCPathCheck.RunAsProfile">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Target/Host/Property[Type='Windows!Microsoft.Windows.Computer']/PrincipalName$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Error" MonitorTypeStateID="Error" HealthState="Error" />
+          <OperationalState ID="Success" MonitorTypeStateID="Success" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <IntervalSeconds>60</IntervalSeconds>
+          <SyncTime />
+          <ScriptName>MyScript.vbs</ScriptName>
+          <Arguments>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Arguments>
+          <ScriptBody><![CDATA[OPTION EXPLICIT
+
+Call Main
+
+Sub Main()
+
+Dim fso, folder, file, fullpath, filesize, I, thresholdvalue, ObjArgs, ObjOpsMgr, ObjBag
+
+Set objArgs = Wscript.Arguments
+' Retrieve parameters
+folder = "\\DemoSCOM\c$\Temp"
+
+' Instantiate File System Object
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+' Instantiate MOM API
+Set ObjOpsMgr = CreateObject("MOM.ScriptAPI")
+Set ObjBag = ObjOpsMgr.CreatePropertyBag()
+
+' Check Folder Exists
+If (fso.FolderExists(folder)) Then
+Call ObjBag.AddValue("FolderExists","Good")
+Else
+Call ObjBag.AddValue("FolderExists","Bad")
+End If
+' Check File Exists
+ObjOpsMgr.AddItem(objBag)
+Call ObjOpsMgr.ReturnItems
+
+End Sub]]></ScriptBody>
+          <SecureInput />
+          <TimeoutSeconds>60</TimeoutSeconds>
+          <ErrorExpression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Property[@Name='FolderExists']</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">Bad</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </ErrorExpression>
+          <SuccessExpression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Property[@Name='FolderExists']</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">Good</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </SuccessExpression>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="UNCPathCheck.SourceServer">
+          <Name>RoboCopy UNC Path Check Source Server</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="UNCPathCheck.UNCPathCheck.SourceServer.Discovery">
+          <Name>UNC Path Check Source Server Discovery</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
+        <DisplayString ElementID="UNCPathCheck.RunAsProfile">
+          <Name> Run As Profile – UNC Path Check</Name>
+          <Description>This run as profile is the UNC Path Check</Description>
+        </DisplayString>
+        <DisplayString ElementID="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath">
+          <Name>Check UNC Path</Name>
+          <Description>Description for the new unit monitor.</Description>
+        </DisplayString>
+        <DisplayString ElementID="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath.AlertMessage">
+          <Name>Failed to Connect to UNC Path</Name>
+          <Description>Check to UNC Path from {0} failed</Description>
+        </DisplayString>
+        <DisplayString ElementID="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath" SubElementID="Error">
+          <Name>Bad</Name>
+          <Description>Bad</Description>
+        </DisplayString>
+        <DisplayString ElementID="UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath" SubElementID="Success">
+          <Name>Good</Name>
+          <Description>Good</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

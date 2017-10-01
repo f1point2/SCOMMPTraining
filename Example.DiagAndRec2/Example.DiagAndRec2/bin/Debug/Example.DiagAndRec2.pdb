@@ -1,0 +1,14 @@
+HealthModel\4_DS_Schedule_Probe.mpx*DS_Schedule_Script*4*8*DataSourceModuleType
+HealthModel\3_Probe.mpx*Probe_RunScript*4*8*ProbeActionModuleType
+HealthModel\5_MonitorType.mpx*Example.DiagAndRec2.MonitorType*4*8*UnitMonitorType
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount*6*8*UnitMonitor
+HealthModel\7_WarningDiagnostic.mpx*Example.DiagAndRec2._7_WarningDiagnostic*5*8*Diagnostic
+HealthModel\8_DeleteFiles.mpx*Example.DiagAndRec2.DeleteFiles*10*8*Recovery
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount.AlertMessage*37*8*StringResource
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount*43*10*DisplayString
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount.AlertMessage*47*10*DisplayString
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount*53*10*DisplayString*SubElementID*UnderThreshold
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount*57*10*DisplayString*SubElementID*OverWarningThreshold
+HealthModel\6_UnitMonitor_Template.mptg.mpx*Example.DiagAndRec2.Monitor.Unit.FileCount*61*10*DisplayString*SubElementID*OverErrorThreshold
+HealthModel\7_WarningDiagnostic.mpx*Example.DiagAndRec2._7_WarningDiagnostic*31*10*DisplayString
+HealthModel\8_DeleteFiles.mpx*Example.DiagAndRec2.DeleteFiles*35*10*DisplayString

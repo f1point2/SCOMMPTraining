@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>DiagnosticsAndRecoveries</ID>
-      <Version>1.0.0.17</Version>
+      <Version>1.0.0.21</Version>
     </Identity>
     <Name>F12 HR Application</Name>
     <References>
@@ -103,6 +103,102 @@ Values 1, 2, and 3 are used only when the PathType is set to 1.
       </Discovery>
     </Discoveries>
     <Monitors>
+      <UnitMonitor ID="F12.HR.Monitor.NTEvent.2State.380" Accessibility="Public" Enabled="true" Target="F12.HR.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.2SingleEventLog2StateMonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="F12.HR.Monitor.NTEvent.2State.380.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/EventDescription$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="FirstEventRaised" MonitorTypeStateID="FirstEventRaised" HealthState="Error" />
+          <OperationalState ID="SecondEventRaised" MonitorTypeStateID="SecondEventRaised" HealthState="Success" />
+        </OperationalStates>
+        <Configuration>
+          <FirstComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</FirstComputerName>
+          <FirstLogName>Application</FirstLogName>
+          <FirstExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">EventCreate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">1</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">380</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </FirstExpression>
+          <SecondComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</SecondComputerName>
+          <SecondLogName>Application</SecondLogName>
+          <SecondExpression>
+            <And>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">381</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">PublisherName</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="String">EventCreate</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">EventLevel</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">1</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </And>
+          </SecondExpression>
+        </Configuration>
+      </UnitMonitor>
       <UnitMonitor ID="F12.HR.Monitor.NTEvent.2State.880" Accessibility="Public" Enabled="true" Target="F12.HR.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.2SingleEventLog2StateMonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
         <AlertSettings AlertMessage="F12.HR.Monitor.NTEvent.2State.880.AlertMessage">
@@ -191,7 +287,7 @@ Values 1, 2, and 3 are used only when the PathType is set to 1.
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="Integer">0</Value>
+                    <Value Type="Integer">1</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -287,7 +383,7 @@ Values 1, 2, and 3 are used only when the PathType is set to 1.
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="Integer">0</Value>
+                    <Value Type="Integer">1</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -297,6 +393,22 @@ Values 1, 2, and 3 are used only when the PathType is set to 1.
       </UnitMonitor>
     </Monitors>
     <Diagnostics>
+      <Diagnostic ID="F12.HR.Diagnostic.ReadRegistry" Target="F12.HR.AppServer" Accessibility="Public" Enabled="true" Monitor="F12.HR.Monitor.NTEvent.2State.380" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Maintenance</Category>
+        <ProbeAction ID="PA" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+          <ScriptName>DiagnosticReadReg.ps1</ScriptName>
+          <ScriptBody><![CDATA[$Version = Get-ItemProperty "hklm:\SOFTWARE\SCOMDiscoveryData\Diagnostic" -Name Version | Select -ExpandProperty Version 
+
+
+$api = New-Object -ComObject 'MOM.ScriptAPI'
+$api.LogScriptEvent('DiagnotsicReadReg.ps1',101,4,$Version)
+
+$bag=$api.createpropertybag()
+$bag.AddValue('Version',$Version)
+$bag]]></ScriptBody>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </ProbeAction>
+      </Diagnostic>
       <Diagnostic ID="F12.HR.Diagnostic.CmdExec.TaskList" Target="F12.HR.AppServer" Accessibility="Public" Enabled="true" Monitor="F12.HR.Monitor.NTEvent.2State.880" ExecuteOnState="Error" Remotable="true" Timeout="300">
         <Category>Maintenance</Category>
         <ProbeAction ID="Command" TypeID="System!System.CommandExecuterProbe">
@@ -324,9 +436,59 @@ Write-EventLog -LogName Application -Source "Diagnostic PowerShell" -EntryType I
         </ProbeAction>
       </Diagnostic>
     </Diagnostics>
+    <Recoveries>
+      <Recovery ID="F12.HR.RecoveryInResponseToDiagnostic" Target="F12.HR.AppServer" Monitor="F12.HR.Monitor.NTEvent.2State.380" Accessibility="Public" Enabled="true" ExecuteOnDiagnostic="F12.HR.Diagnostic.ReadRegistry" Remotable="true" ResetMonitor="false" Timeout="300">
+        <Category>Maintenance</Category>
+        <!-- Please fill in the type of the condition detection module 
+             or remove the ConditionDetection section. This can be used to
+             inspect the Monitor State, Data Item that caused the State Change,
+             or the Diagnostic ProbeAction Output (if the ExecuteOnDiagnostic
+             attribute is present). If this Condition Detection does not "pass"
+             the WriteAction will not be executed. -->
+        <ConditionDetection ID="CD" TypeID="System!System.ExpressionFilter">
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Diagnostic/DataItem/Property[@Name='Version']</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">1.2.3</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </ConditionDetection>
+        <!-- Please fill in the type of the write action module.
+             Without a ConditionDetection, the WriteAction always executes.
+             The output of the write action will be shown in the 
+             Health Explorer detail pane. -->
+        <WriteAction ID="WA" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+          <ScriptName>RecoveryWriteLog.ps1</ScriptName>
+          <ScriptBody><![CDATA[Param (
+$Version
+)
+
+If ([System.Diagnostics.EventLog]::SourceExists("Diagnostic and Recovery PowerShell") -eq $False) {
+New-EventLog -LogName Application -Source "Diagnostic and Recovery PowerShell"
+}
+
+$Msg = 
+"Recovery in response to Diagnostic Has Completed - Version = $Version" 
+Write-EventLog -LogName Application -Source "Diagnostic and Recovery PowerShell" -EntryType Information -EventID 2345 -Message $Msg ]]></ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>Version</Name>
+              <Value>$Data/Diagnostic/DataItem/Property[@Name='Version']$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+    </Recoveries>
   </Monitoring>
   <Presentation>
     <StringResources>
+      <StringResource ID="F12.HR.Monitor.NTEvent.2State.380.AlertMessage" />
       <StringResource ID="F12.HR.Monitor.NTEvent.2State.880.AlertMessage" />
       <StringResource ID="F12.HR.Monitor.NTEvent.2State.AlertMessage" />
     </StringResources>
@@ -349,6 +511,30 @@ Write-EventLog -LogName Application -Source "Diagnostic PowerShell" -EntryType I
         <DisplayString ElementID="DiagnosticsAndRecoveries">
           <Name>F12 HR Application Management Pack</Name>
           <Description>Management Pack Examples for Diagnostics and Recoveries</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380.AlertMessage">
+          <Name>Alert Name - Single Event Log Timer 2 State Monitor</Name>
+          <Description>{0}</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380" SubElementID="FirstEventRaised">
+          <Name>FirstEventRaised</Name>
+          <Description>FirstEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380" SubElementID="SecondEventRaised">
+          <Name>SecondEventRaised</Name>
+          <Description>SecondEventRaised</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380">
+          <Name>Monitor for Event 380</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.Diagnostic.ReadRegistry">
+          <Name>Diagnostic Diagnostic</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.HR.RecoveryInResponseToDiagnostic">
+          <Name>Recovery In Response To Diagnostic</Name>
+          <Description></Description>
         </DisplayString>
         <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880.AlertMessage">
           <Name>Alert Name - Single Event Log Timer 2 State Monitor</Name>

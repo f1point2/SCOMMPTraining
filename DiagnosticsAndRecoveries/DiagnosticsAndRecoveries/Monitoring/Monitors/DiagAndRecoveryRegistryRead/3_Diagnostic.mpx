@@ -1,0 +1,34 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Monitoring>
+    <Diagnostics>
+
+      <!-- In this section, you must edit the Target and Monitor attributes to 
+           configure this Diagnostic to run on a particular Monitor running on
+           that Target. More information can be found in the Management Pack Development Kit: 
+           http://msdn.microsoft.com/en-us/library/ee533473.aspx -->
+      <Diagnostic ID="F12.HR.Diagnostic.ReadRegistry" Target="F12.HR.AppServer" Accessibility="Public" Enabled="true" Monitor="F12.HR.Monitor.NTEvent.2State.380" ExecuteOnState="Error" Remotable="true" Timeout="300">
+        <Category>Maintenance</Category>
+        <ProbeAction ID="PA" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+          <ScriptName>DiagnosticReadReg.ps1</ScriptName>
+          <ScriptBody>$IncludeFileContent/Monitoring/Monitors/DiagAndRecoveryRegistryRead/2_ReadReg.ps1$</ScriptBody>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </ProbeAction>
+      </Diagnostic>
+    </Diagnostics>
+  </Monitoring>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+
+        <!-- The name of the Diagnostic will appear in the Health Explorer
+             detail pane. The user can manually click the Diagnostic to run
+             it again. -->
+        <DisplayString ElementID="F12.HR.Diagnostic.ReadRegistry">
+          <Name>Diagnostic Diagnostic</Name>
+          <Description></Description>
+        </DisplayString>
+
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

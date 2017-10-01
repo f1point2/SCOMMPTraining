@@ -1,0 +1,42 @@
+<TemplateGroup>
+  <Instances>
+    <Instance ID="Instance1cb8bbbf42bb4bd8ba0ce5a2d4aaa2da" Type="Microsoft.SystemCenter.Authoring.CodeGeneration.Monitoring.UnitMonitor" Version="1.0.0.0">
+      <UnitMonitorConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+        <MonitorType>Windows!Microsoft.Windows.TimedScript.TwoStateMonitorType</MonitorType>
+        <MonitorConfig>&lt;IntervalSeconds&gt;60&lt;/IntervalSeconds&gt;&lt;SyncTime /&gt;&lt;ScriptName&gt;MyScript.vbs&lt;/ScriptName&gt;&lt;Arguments&gt;$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$&lt;/Arguments&gt;&lt;ScriptBody&gt;$IncludeFileContent/Monitors/UNCPathCheck.vbs$&lt;/ScriptBody&gt;&lt;SecureInput /&gt;&lt;TimeoutSeconds&gt;60&lt;/TimeoutSeconds&gt;&lt;ErrorExpression&gt;&lt;SimpleExpression&gt;&lt;ValueExpression&gt;&lt;XPathQuery Type="String"&gt;Property[@Name='FolderExists']&lt;/XPathQuery&gt;&lt;/ValueExpression&gt;&lt;Operator&gt;Equal&lt;/Operator&gt;&lt;ValueExpression&gt;&lt;Value Type="String"&gt;Bad&lt;/Value&gt;&lt;/ValueExpression&gt;&lt;/SimpleExpression&gt;&lt;/ErrorExpression&gt;&lt;SuccessExpression&gt;&lt;SimpleExpression&gt;&lt;ValueExpression&gt;&lt;XPathQuery Type="String"&gt;Property[@Name='FolderExists']&lt;/XPathQuery&gt;&lt;/ValueExpression&gt;&lt;Operator&gt;Equal&lt;/Operator&gt;&lt;ValueExpression&gt;&lt;Value Type="String"&gt;Good&lt;/Value&gt;&lt;/ValueExpression&gt;&lt;/SimpleExpression&gt;&lt;/SuccessExpression&gt;</MonitorConfig>
+        <MonitorOperationalStates>
+          <OperationalState>
+            <OperationalStateId>Error</OperationalStateId>
+            <OperationalStateDisplayName>Bad</OperationalStateDisplayName>
+            <MonitorTypeStateId>Error</MonitorTypeStateId>
+            <HealthState>Error</HealthState>
+          </OperationalState>
+          <OperationalState>
+            <OperationalStateId>Success</OperationalStateId>
+            <OperationalStateDisplayName>Good</OperationalStateDisplayName>
+            <MonitorTypeStateId>Success</MonitorTypeStateId>
+            <HealthState>Success</HealthState>
+          </OperationalState>
+        </MonitorOperationalStates>
+        <MonitorRunAs>UNCPathCheck.RunAsProfile</MonitorRunAs>
+        <ParentMonitor>Health!System.Health.EntityState</ParentMonitor>
+        <Accessibility>Public</Accessibility>
+        <Id>UNCPathCheck.SourceServer.UnitMonitor.UNCPath</Id>
+        <DisplayName>Check UNC Path</DisplayName>
+        <Description>Description for the new unit monitor.</Description>
+        <Target>UNCPathCheck.SourceServer</Target>
+        <Enabled>true</Enabled>
+        <Category>AvailabilityHealth</Category>
+        <Remotable>true</Remotable>
+        <Priority>Normal</Priority>
+        <AlertAutoResolve>true</AlertAutoResolve>
+        <AlertOnState>Error</AlertOnState>
+        <AlertPriority>Normal</AlertPriority>
+        <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+        <AlertName>Failed to Connect to UNC Path</AlertName>
+        <AlertDescription>Check to UNC Path from $Target/Host/Property[Type='Windows!Microsoft.Windows.Computer']/PrincipalName$ failed</AlertDescription>
+        <ConfirmDelivery>false</ConfirmDelivery>
+      </UnitMonitorConfig>
+    </Instance>
+  </Instances>
+</TemplateGroup>

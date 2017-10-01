@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>Example.DiagAndRec2</ID>
+      <Version>1.0.0.0</Version>
+    </Identity>
+    <Name>Example.DiagAndRec2</Name>
+    <References>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <ModuleTypes>
+      <DataSourceModuleType ID="DS_Schedule_Script" Accessibility="Internal">
+        <Configuration>
+          <!-- Need configuration elements for the scheduler -->
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <!-- Can copy and paste from 1_Probe -->
+          <xsd:element name="FolderPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="CriticalThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Schedule" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Script" TypeID="Probe_RunScript">
+                <FolderPath>$Config/FolderPath$</FolderPath>
+                <WarningThreshold>$Config/WarningThreshold$</WarningThreshold>
+                <CriticalThreshold>$Config/CriticalThreshold$</CriticalThreshold>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script">
+                <Node ID="Schedule" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="Probe_RunScript" Accessibility="Internal">
+        <Configuration>
+          <xsd:element name="FolderPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="CriticalThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="Script" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagTriggerOnlyProbe">
+                <ScriptName>2_FileCountPSWithMOMAPI.ps1</ScriptName>
+                <ScriptBody><![CDATA[param
+(
+[string]$FolderPath,
+[int]$WarningThreshold,
+[int]$CriticalThreshold
+)
+
+
+$files=Get-ChildItem -Path "$FolderPath" -Recurse | where {$_.psIsContainer -eq $false}
+if ($files -ne $null) {$count = $files.count}
+else {$count=0}
+
+
+#Setup the objects
+$api=New-Object -comObject 'MOM.ScriptAPI'
+$api.LogScriptEvent('Count =',80,0,$count)
+$api.LogScriptEvent('Folder Path =',81,0,$folderpath)
+
+
+$bag=$api.CreatePropertyBag()
+
+#Add name / value pairs
+
+$bag.AddValue('FileCount',$count)
+$bag.AddValue('WarningThreshold',$WarningThreshold)
+$bag.AddValue('CriticalThreshold',$CriticalThreshold)
+$bag.AddValue('FolderPath',$FolderPath)
+
+
+#Return property bag
+$bag
+
+# Testing
+#$api.Return($bag)
+
+]]></ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>FolderPath</Name>
+                    <Value>$Config/FolderPath$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>WarningThreshold</Name>
+                    <Value>$Config/WarningThreshold$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>CriticalThreshold</Name>
+                    <Value>$Config/CriticalThreshold$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>120</TimeoutSeconds>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <TriggerOnly>true</TriggerOnly>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="Example.DiagAndRec2.MonitorType" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="UnderThreshold" NoDetection="false" />
+          <MonitorTypeState ID="OverWarningThreshold" NoDetection="false" />
+          <MonitorTypeState ID="OverErrorThreshold" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <!-- Copy form 4_DS_Schedule_Probe -->
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="FolderPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="CriticalThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="FolderPath" Selector="$Config/FolderPath$" ParameterType="string" />
+          <OverrideableParameter ID="WarningThreshold" Selector="$Config/WarningThreshold$" ParameterType="int" />
+          <OverrideableParameter ID="CriticalThreshold" Selector="$Config/CriticalThreshold$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="DS_Schedule_Script">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <FolderPath>$Config/FolderPath$</FolderPath>
+              <WarningThreshold>$Config/WarningThreshold$</WarningThreshold>
+              <CriticalThreshold>$Config/CriticalThreshold$</CriticalThreshold>
+            </DataSource>
+            <!-- We want a probe for on demand detection. The ability to use recalucalte health outside of the scheduler - our initial 3_Probe\ DS -->
+            <ProbeAction ID="Probe" TypeID="Probe_RunScript">
+              <FolderPath>$Config/FolderPath$</FolderPath>
+              <WarningThreshold>$Config/WarningThreshold$</WarningThreshold>
+              <CriticalThreshold>$Config/CriticalThreshold$</CriticalThreshold>
+            </ProbeAction>
+            <!-- Condition Detections to determine health states -->
+            <!-- Healthy -->
+            <ConditionDetection ID="FilterUnderThreshold" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileCount']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>LessEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">$Config/WarningThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <!-- Condition Detections to determine health states -->
+            <!-- Warning -->
+            <ConditionDetection ID="FilterOverWarningThreshold" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <And>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">Property[@Name='FileCount']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Greater</Operator>
+                      <ValueExpression>
+                        <Value Type="Integer">$Config/WarningThreshold$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                  <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">Property[@Name='FileCount']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Less</Operator>
+                      <ValueExpression>
+                        <Value Type="Integer">$Config/CriticalThreshold$</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+                </And>
+              </Expression>
+            </ConditionDetection>
+            <!-- Condition Detections to determine health states -->
+            <!-- Error -->
+            <ConditionDetection ID="FilterOverErrorThreshold" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileCount']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>GreaterEqual</Operator>
+                  <ValueExpression>
+                    <Value Type="Integer">$Config/CriticalThreshold$</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <!-- REGULAR DETECTIONS -->
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="FilterUnderThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="OverWarningThreshold">
+              <Node ID="FilterOverWarningThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="OverErrorThreshold">
+              <Node ID="FilterOverErrorThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+          <!-- ON DEMAND DETECTIONS -->
+          <OnDemandDetections>
+            <OnDemandDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="FilterUnderThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+            <OnDemandDetection MonitorTypeStateID="OverWarningThreshold">
+              <Node ID="FilterOverWarningThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+            <OnDemandDetection MonitorTypeStateID="OverErrorThreshold">
+              <Node ID="FilterOverErrorThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+          </OnDemandDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Monitors>
+      <UnitMonitor ID="Example.DiagAndRec2.Monitor.Unit.FileCount" Accessibility="Public" Enabled="true" Target="Windows!Microsoft.Windows.Server.OperatingSystem" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Example.DiagAndRec2.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="Example.DiagAndRec2.Monitor.Unit.FileCount.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name='FolderPath']$</AlertParameter1>
+            <AlertParameter2>$Data/Context/Property[@Name='FileCount']$</AlertParameter2>
+            <AlertParameter3>$Data/Context/Property[@Name='WarningThreshold']$</AlertParameter3>
+            <AlertParameter4>$Data/Context/Property[@Name='CriticalThreshold']$</AlertParameter4>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="UnderThreshold" MonitorTypeStateID="UnderThreshold" HealthState="Success" />
+          <OperationalState ID="OverWarningThreshold" MonitorTypeStateID="OverWarningThreshold" HealthState="Warning" />
+          <OperationalState ID="OverErrorThreshold" MonitorTypeStateID="OverErrorThreshold" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <SyncTime></SyncTime>
+          <IntervalSeconds>60</IntervalSeconds>
+          <FolderPath>C:\TempTest</FolderPath>
+          <WarningThreshold>5</WarningThreshold>
+          <CriticalThreshold>10</CriticalThreshold>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+    <Diagnostics>
+      <Diagnostic ID="Example.DiagAndRec2._7_WarningDiagnostic" Target="Windows!Microsoft.Windows.Server.OperatingSystem" Accessibility="Public" Enabled="true" Monitor="Example.DiagAndRec2.Monitor.Unit.FileCount" ExecuteOnState="Warning" Remotable="true" Timeout="300">
+        <Category>Maintenance</Category>
+        <ProbeAction ID="PA" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagProbe">
+          <ScriptName>7_PowerShell_WriteEventLog_Diagnostic.ps1</ScriptName>
+          <ScriptBody><![CDATA[
+Param (
+[int]$FileCount
+)
+
+If ([System.Diagnostics.EventLog]::SourceExists("Diagnostic PowerShell") -eq $False) {
+New-EventLog -LogName Application -Source "Diagnostic PowerShell"
+}
+
+$Msg = "Diagnostic has completed for file count = $FileCount" 
+Write-EventLog -LogName Application -Source "Diagnostic PowerShell" -EntryType Information -EventID 234 -Message $Msg ]]></ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>FileCount</Name>
+              <Value>$Data/StateChange/DataItem/Context/DataItem/Property[@Name='FileCount']$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </ProbeAction>
+      </Diagnostic>
+    </Diagnostics>
+    <Recoveries>
+      <Recovery ID="Example.DiagAndRec2.DeleteFiles" Target="Windows!Microsoft.Windows.Server.OperatingSystem" Monitor="Example.DiagAndRec2.Monitor.Unit.FileCount" Accessibility="Public" Enabled="false" ExecuteOnState="Error" Remotable="true" ResetMonitor="false" Timeout="300">
+        <Category>Maintenance</Category>
+        <WriteAction ID="WA" TypeID="Windows!Microsoft.Windows.PowerShellWriteAction">
+          <ScriptName>8_DeleteFiles.ps1</ScriptName>
+          <ScriptBody><![CDATA[param(
+[string]$FolderPath
+)
+
+get-childitem -Path $FolderPath | foreach ($_) {remove-item $_.fullname}]]></ScriptBody>
+          <Parameters>
+            <Parameter>
+              <Name>FolderPath</Name>
+              <Value>$Data/StateChange/DataItem/Context/DataItem/Property[@Name='FolderPath']$</Value>
+            </Parameter>
+          </Parameters>
+          <TimeoutSeconds>300</TimeoutSeconds>
+        </WriteAction>
+      </Recovery>
+    </Recoveries>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="Example.DiagAndRec2.Monitor.Unit.FileCount.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="Example.DiagAndRec2.Monitor.Unit.FileCount">
+          <Name>File Count</Name>
+          <Description>Description for the new unit monitor.</Description>
+        </DisplayString>
+        <DisplayString ElementID="Example.DiagAndRec2.Monitor.Unit.FileCount.AlertMessage">
+          <Name>Too many files in folder</Name>
+          <Description>There number of files in the folder {0} is {1}
+Warning Threshold is {2} files
+Error Threshold is {3} files</Description>
+        </DisplayString>
+        <DisplayString ElementID="Example.DiagAndRec2.Monitor.Unit.FileCount" SubElementID="UnderThreshold">
+          <Name>UnderThreshold</Name>
+          <Description>UnderThreshold</Description>
+        </DisplayString>
+        <DisplayString ElementID="Example.DiagAndRec2.Monitor.Unit.FileCount" SubElementID="OverWarningThreshold">
+          <Name>OverWarningThreshold</Name>
+          <Description>OverWarningThreshold</Description>
+        </DisplayString>
+        <DisplayString ElementID="Example.DiagAndRec2.Monitor.Unit.FileCount" SubElementID="OverErrorThreshold">
+          <Name>OverErrorThreshold</Name>
+          <Description>OverErrorThreshold</Description>
+        </DisplayString>
+        <DisplayString ElementID="Example.DiagAndRec2._7_WarningDiagnostic">
+          <Name>Diagnostic To Write to Application Log</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="Example.DiagAndRec2.DeleteFiles">
+          <Name>DeleteFiles Recovery</Name>
+          <Description></Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

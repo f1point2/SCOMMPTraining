@@ -89,7 +89,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="Integer">0</Value>
+                    <Value Type="Integer">1</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>

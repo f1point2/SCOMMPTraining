@@ -1,0 +1,12 @@
+Classes\Classes.mpx*UNCPathCheck.SourceServer*5*10*ClassType
+Monitors\RunAsProfile.mpx*UNCPathCheck.RunAsProfile*4*8*SecureReference
+Discoveries\Discoveries.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.Discovery*6*8*Discovery
+Monitors\UnitMonitors.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath*6*8*UnitMonitor
+Monitors\UnitMonitors.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath.AlertMessage*57*8*StringResource
+Classes\Classes.mpx*UNCPathCheck.SourceServer*12*10*DisplayString
+Discoveries\Discoveries.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.Discovery*53*10*DisplayString
+Monitors\RunAsProfile.mpx*UNCPathCheck.RunAsProfile*10*10*DisplayString
+Monitors\UnitMonitors.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath*63*10*DisplayString
+Monitors\UnitMonitors.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath.AlertMessage*67*10*DisplayString
+Monitors\UnitMonitors.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath*71*10*DisplayString*SubElementID*Error
+Monitors\UnitMonitors.mptg.mpx*UNCPathCheck.UNCPathCheck.SourceServer.UnitMonitor.UNCPath*75*10*DisplayString*SubElementID*Success

@@ -1,9 +1,9 @@
 ﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Monitoring>
     <Monitors>
-      <UnitMonitor ID="F12.HR.Monitor.NTEvent.2State.880" Accessibility="Public" Enabled="true" Target="F12.HR.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.2SingleEventLog2StateMonitorType" ConfirmDelivery="false">
+      <UnitMonitor ID="F12.HR.Monitor.NTEvent.2State.380" Accessibility="Public" Enabled="true" Target="F12.HR.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="Windows!Microsoft.Windows.2SingleEventLog2StateMonitorType" ConfirmDelivery="false">
         <Category>AvailabilityHealth</Category>
-        <AlertSettings AlertMessage="F12.HR.Monitor.NTEvent.2State.880.AlertMessage">
+        <AlertSettings AlertMessage="F12.HR.Monitor.NTEvent.2State.380.AlertMessage">
           <AlertOnState>Error</AlertOnState>
           <AutoResolve>true</AutoResolve>
           <AlertPriority>Normal</AlertPriority>
@@ -43,17 +43,17 @@
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
-                  <Expression>
-                    <SimpleExpression>
-                      <ValueExpression>
-                        <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
-                      </ValueExpression>
-                      <Operator>Equal</Operator>
-                      <ValueExpression>
-                        <Value Type="UnsignedInteger">880</Value>
-                      </ValueExpression>
-                    </SimpleExpression>
-                  </Expression>
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="UnsignedInteger">EventDisplayNumber</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value Type="UnsignedInteger">380</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
             </And>
           </FirstExpression>
           <SecondComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</SecondComputerName>
@@ -67,7 +67,7 @@
                   </ValueExpression>
                   <Operator>Equal</Operator>
                   <ValueExpression>
-                    <Value Type="UnsignedInteger">881</Value>
+                    <Value Type="UnsignedInteger">381</Value>
                   </ValueExpression>
                 </SimpleExpression>
               </Expression>
@@ -101,27 +101,27 @@
   </Monitoring>
   <Presentation>
     <StringResources>
-      <StringResource ID="F12.HR.Monitor.NTEvent.2State.880.AlertMessage" />
+      <StringResource ID="F12.HR.Monitor.NTEvent.2State.380.AlertMessage" />
     </StringResources>
   </Presentation>
   <LanguagePacks>
     <LanguagePack ID="ENU" IsDefault="true">
       <DisplayStrings>
-        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880.AlertMessage">
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380.AlertMessage">
           <Name>Alert Name - Single Event Log Timer 2 State Monitor</Name>
           <Description>{0}</Description>
         </DisplayString>
-        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880" SubElementID="FirstEventRaised">
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380" SubElementID="FirstEventRaised">
           <Name>FirstEventRaised</Name>
           <Description>FirstEventRaised</Description>
         </DisplayString>
-        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880" SubElementID="SecondEventRaised">
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380" SubElementID="SecondEventRaised">
           <Name>SecondEventRaised</Name>
           <Description>SecondEventRaised</Description>
         </DisplayString>
-        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.880">
-          <Name>Monitor for Event 880</Name>
-          <Description>SecondEventRaised</Description>
+        <DisplayString ElementID="F12.HR.Monitor.NTEvent.2State.380">
+          <Name>Monitor for Event 380</Name>
+          <Description></Description>
         </DisplayString>
       </DisplayStrings>
     </LanguagePack>

@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{0750094a-b1fb-4f74-8f3d-b85e96fe638f}</ProjectGuid>
+    <RootNamespace>Example.DiagAndRec2</RootNamespace>
+    <Name>Example.DiagAndRec2</Name>
+    <ManagementPackName>Example.DiagAndRec2</ManagementPackName>
+    <Version>1.0.0.0</Version>
+    <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
+    <MpFrameworkProfile>OM</MpFrameworkProfile>
+    <ProductVersion>1.1.0.0</ProductVersion>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Debug\</OutputPath>
+    <GenerateSealed>false</GenerateSealed>
+    <Company>MyCompany</Company>
+    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
+    <DelaySigning>false</DelaySigning>
+    <AssemblyOriginatorKeyFile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DelaySigning>false</DelaySigning>
+    <Company>MyCompany</Company>
+    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Library">
+      <Alias>SC</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.Windows.Library">
+      <Alias>Windows</Alias>
+      <PackageToBundle>False</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Health.Library">
+      <Alias>Health</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Library">
+      <Alias>System</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Visualization.Library">
+      <Alias>Visualization</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="HealthModel" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="HealthModel\1_FileCountPS.ps1" />
+    <EmbeddedResource Include="HealthModel\2_FileCountPSWithMOMAPI.ps1" />
+    <EmbeddedResource Include="HealthModel\7_PowerShell_WriteEventLog_Diagnostic.ps1" />
+    <EmbeddedResource Include="HealthModel\8_DeleteFiles.ps1" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="HealthModel\3_Probe.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HealthModel\4_DS_Schedule_Probe.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HealthModel\5_MonitorType.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HealthModel\6_UnitMonitor_Template.mptg.mpx">
+      <SubType>Code</SubType>
+      <DependentUpon>HealthModel\6_UnitMonitor_Template.mptg</DependentUpon>
+    </Compile>
+    <Compile Include="HealthModel\7_WarningDiagnostic.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="HealthModel\8_DeleteFiles.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="HealthModel\6_UnitMonitor_Template.mptg">
+      <SubType>Content</SubType>
+      <Generator>FragmentGenerator</Generator>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
+</Project>

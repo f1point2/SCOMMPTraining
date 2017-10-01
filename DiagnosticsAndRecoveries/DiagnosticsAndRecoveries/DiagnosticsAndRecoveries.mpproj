@@ -58,6 +58,15 @@
     <Compile Include="ManagementPack.mpx">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Monitoring\Monitors\DiagAndRecoveryRegistryRead\1_2State_NTEventLog_Monitor_380.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\DiagAndRecoveryRegistryRead\3_Diagnostic.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\DiagAndRecoveryRegistryRead\5_PassDiagnosticDatatoRecovery.mpx">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Monitoring\Monitors\DiagnosticCommandExecuterProbe\1_2StateNTEventLog_Monitor.880.mpx">
       <SubType>Code</SubType>
     </Compile>
@@ -77,8 +86,12 @@
     <Folder Include="Monitoring\Monitors" />
     <Folder Include="Monitoring\Monitors\DiagnosticCommandExecuterProbe" />
     <Folder Include="Monitoring\Monitors\DiagnosticPowerShell" />
+    <Folder Include="Monitoring\Monitors\DiagAndRecoveryRegistryRead" />
+    <Folder Include="Monitoring\Monitors\DiagAndRecoveryFileCount" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Monitoring\Monitors\DiagAndRecoveryRegistryRead\2_ReadReg.ps1" />
+    <EmbeddedResource Include="Monitoring\Monitors\DiagAndRecoveryRegistryRead\4_WriteEventLog.ps1" />
     <EmbeddedResource Include="Monitoring\Monitors\DiagnosticPowerShell\3_PShell.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />

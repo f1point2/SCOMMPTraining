@@ -1,0 +1,43 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <ModuleTypes>
+      <ProbeActionModuleType ID="Probe_RunScript" Accessibility="Internal">
+        <Configuration>
+          <xsd:element name="FolderPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="WarningThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="CriticalThreshold" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <ProbeAction ID="Script" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagTriggerOnlyProbe">
+                <ScriptName>2_FileCountPSWithMOMAPI.ps1</ScriptName>
+                <ScriptBody>$IncludeFileContent/HealthModel/2_FileCountPSWithMOMAPI.ps1$</ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>FolderPath</Name>
+                    <Value>$Config/FolderPath$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>WarningThreshold</Name>
+                    <Value>$Config/WarningThreshold$</Value>
+                  </Parameter>
+                  <Parameter>
+                    <Name>CriticalThreshold</Name>
+                    <Value>$Config/CriticalThreshold$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>120</TimeoutSeconds>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <TriggerOnly>true</TriggerOnly>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+  </TypeDefinitions>
+</ManagementPackFragment>
