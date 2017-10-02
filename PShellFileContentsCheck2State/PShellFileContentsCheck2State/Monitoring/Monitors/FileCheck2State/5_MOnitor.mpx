@@ -9,7 +9,7 @@
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
                     <AlertParameters>
-            <AlertParameter1>$Data/Context/FileContent$</AlertParameter1>
+            <AlertParameter1>$Data/Context/Property[@Name='FileContent']$ </AlertParameter1>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>

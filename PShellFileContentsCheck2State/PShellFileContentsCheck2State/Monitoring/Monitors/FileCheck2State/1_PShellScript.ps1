@@ -13,8 +13,8 @@ Else
 
 {
 
-$api.LogScriptEvent('Check File Contents = ',40,0,$Value)
 $Value = Get-Content $Path
+$api.LogScriptEvent('Check File Contents = ',40,0,$Value)
 $bag.AddValue('FileContent',$Value)
 
 }
