@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>PShellFileContentsCheck2State</ID>
-      <Version>1.0.0.11</Version>
+      <Version>1.0.0.12</Version>
     </Identity>
     <Name>PShell File Contents Check 2 State</Name>
     <References>
@@ -87,8 +87,8 @@ Else
 
 {
 
-$api.LogScriptEvent('Check File Contents = ',40,0,$Value)
 $Value = Get-Content $Path
+$api.LogScriptEvent('Check File Contents = ',40,0,$Value)
 $bag.AddValue('FileContent',$Value)
 
 }
@@ -97,7 +97,7 @@ $bag.AddValue('FileContent',$Value)
 $bag
 
 # Testing
-# $api.Return($bag
+# $api.Return($bag)
 
 ]]></ScriptBody>
                 <Parameters />
@@ -293,7 +293,7 @@ Values 1, 2, and 3 are used only when the PathType is set to 1.
           <AlertPriority>Normal</AlertPriority>
           <AlertSeverity>MatchMonitorHealth</AlertSeverity>
           <AlertParameters>
-            <AlertParameter1>$Data/Context/FileContent$</AlertParameter1>
+            <AlertParameter1>$Data/Context/Property[@Name='FileContent']$ </AlertParameter1>
           </AlertParameters>
         </AlertSettings>
         <OperationalStates>
