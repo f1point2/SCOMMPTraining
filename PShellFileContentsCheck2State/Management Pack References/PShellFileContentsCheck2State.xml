@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>PShellFileContentsCheck2State</ID>
+      <Version>1.0.0.11</Version>
+    </Identity>
+    <Name>PShell File Contents Check 2 State</Name>
+    <References>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="F12.MyLogFileApp.AppServer" Base="Windows!Microsoft.Windows.ComputerRole" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false"></ClassType>
+      </ClassTypes>
+    </EntityTypes>
+    <ModuleTypes>
+      <DataSourceModuleType ID="F12.CheckFileContent.DS.PropertyBag" Accessibility="Internal">
+        <Configuration>
+          <!-- Need configuration elements for the scheduler -->
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Schedule" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Script" TypeID="F12.CheckFileContent.Probe"></ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script">
+                <Node ID="Schedule" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="F12.CheckFileContent.Probe" Accessibility="Internal">
+        <!-- List of Parameters that module expects e.g. Folder-->
+        <Configuration />
+        <OverrideableParameters>
+          <!-- We don't want the end user to change the folder in this case -->
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <!-- These are the modules that make up the module, the composition section is where we state the order they run -->
+              <!-- Trigger only probe means it doesn't require any incoming data e.g. use for On Demand Detection-->
+              <ProbeAction ID="Script" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagTriggerOnlyProbe">
+                <ScriptName>CheckFile.ps1</ScriptName>
+                <ScriptBody><![CDATA[
+$Path = "C:\LogFileApp\Output.txt"
+
+#Setup the objects
+$api=New-Object -comObject 'MOM.ScriptAPI'
+$bag=$api.CreatePropertyBag()
+
+if(![System.IO.File]::Exists($path)){
+    $bag.AddValue('FileContent','NoFile')
+}
+
+Else 
+
+{
+
+$api.LogScriptEvent('Check File Contents = ',40,0,$Value)
+$Value = Get-Content $Path
+$bag.AddValue('FileContent',$Value)
+
+}
+
+#Return property bag
+$bag
+
+# Testing
+# $api.Return($bag
+
+]]></ScriptBody>
+                <Parameters />
+                <TimeoutSeconds>120</TimeoutSeconds>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <TriggerOnly>true</TriggerOnly>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="F12.CheckFileContent.MonitorType" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="UnderThreshold" NoDetection="false" />
+          <MonitorTypeState ID="OverWarningThreshold" NoDetection="false" />
+          <MonitorTypeState ID="OverErrorThreshold" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <!-- Copy form 3_DS_CD_PerfMapper -->
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <!-- Copy form 3_DS_CD_PerfMapper -->
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <!-- Same data source as 3. This is for regular detections-->
+            <DataSource ID="DS" TypeID="F12.CheckFileContent.DS.PropertyBag">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+            </DataSource>
+            <!-- We want a probe for on demand detection. The ability to use recalucalte health outside of the scheduler \ DS -->
+            <ProbeAction ID="Probe" TypeID="F12.CheckFileContent.Probe"></ProbeAction>
+            <!-- Condition Detections to determine health states -->
+            <!-- Healthy -->
+            <ConditionDetection ID="FilterUnderThreshold" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileContent']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <!-- Condition Detections to determine health states -->
+            <!-- Warning -->
+            <ConditionDetection ID="FilterOverWarningThreshold" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileContent']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>NoFile</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+            <!-- Condition Detections to determine health states -->
+            <!-- Error -->
+            <ConditionDetection ID="FilterOverErrorThreshold" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileContent']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>ADFS</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <!-- REGULAR DETECTIONS -->
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="FilterUnderThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="OverWarningThreshold">
+              <Node ID="FilterOverWarningThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="OverErrorThreshold">
+              <Node ID="FilterOverErrorThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+          <!-- ON DEMAND DETECTIONS -->
+          <OnDemandDetections>
+            <OnDemandDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="FilterUnderThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+            <OnDemandDetection MonitorTypeStateID="OverWarningThreshold">
+              <Node ID="FilterOverWarningThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+            <OnDemandDetection MonitorTypeStateID="OverErrorThreshold">
+              <Node ID="FilterOverErrorThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+          </OnDemandDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="F12.MyLogFileApp.AppServer.Discovery" Target="Windows!Microsoft.Windows.Server.OperatingSystem" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="F12.MyLogFileApp.AppServer" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <!-- 
+PathType - Integer
+  Specifies whether the path is a key or a value.
+  • 0—Specifies that the path is to a key, for which the existence of the key should be checked.
+  • 1—Specifies that the path is to a value that should be retrieved.
+
+AttributeType -   Integer
+  The data type of the value to return:
+  • 0—Boolean
+  • 1—String
+  • 2—Integer
+  • 3—Float
+Values 1, 2, and 3 are used only when the PathType is set to 1.
+-->
+              <AttributeName>SeedExists</AttributeName>
+              <Path>SOFTWARE\SCOMDiscoveryData\MyLogFileContent</Path>
+              <PathType>0</PathType>
+              <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>3600</Frequency>
+          <ClassId>$MPElement[Name="F12.MyLogFileApp.AppServer"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Values/SeedExists</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">True</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="F12.Monitor.Unit.CheckFileContent" Accessibility="Public" Enabled="true" Target="F12.MyLogFileApp.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="F12.CheckFileContent.MonitorType" ConfirmDelivery="false">
+        <Category>PerformanceHealth</Category>
+        <AlertSettings AlertMessage="F12.Monitor.Unit.CheckFileContent.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/FileContent$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="UnderThreshold" MonitorTypeStateID="UnderThreshold" HealthState="Success" />
+          <OperationalState ID="OverWarningThreshold" MonitorTypeStateID="OverWarningThreshold" HealthState="Warning" />
+          <OperationalState ID="OverErrorThreshold" MonitorTypeStateID="OverErrorThreshold" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <SyncTime />
+          <IntervalSeconds>60</IntervalSeconds>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="F12.Monitor.Unit.CheckFileContent.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="F12.MyLogFileApp.AppServer">
+          <Name>F12 My Log File App Application Server</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.MyLogFileApp.AppServer.Discovery">
+          <Name>Discover F12 My Log File App Application Server</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
+        <DisplayString ElementID="PShellFileContentsCheck2State">
+          <Name>F12 - Check a file and retrive contents</Name>
+          <Description>PowerShell 2 state monitor</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent">
+          <Name>Check File Content</Name>
+          <Description>Description for the new unit monitor.</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent.AlertMessage">
+          <Name>File Content Found</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent" SubElementID="UnderThreshold">
+          <Name>File Content OK</Name>
+          <Description>OK</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent" SubElementID="OverWarningThreshold">
+          <Name>No File Found</Name>
+          <Description>The file was not found</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent" SubElementID="OverErrorThreshold">
+          <Name>File Content shows Error</Name>
+          <Description>Value = {0}</Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>

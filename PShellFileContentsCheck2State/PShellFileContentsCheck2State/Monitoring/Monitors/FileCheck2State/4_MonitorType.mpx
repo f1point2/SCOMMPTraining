@@ -1,0 +1,123 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <MonitorTypes>
+      <UnitMonitorType ID="F12.CheckFileContent.MonitorType" Accessibility="Internal" >
+        <MonitorTypeStates>
+          <MonitorTypeState ID="UnderThreshold" NoDetection="false"/>
+          <MonitorTypeState ID="OverWarningThreshold" NoDetection="false"/>
+          <MonitorTypeState ID="OverErrorThreshold" NoDetection="false"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <!-- Copy form 3_DS_CD_PerfMapper -->
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <!-- Copy form 3_DS_CD_PerfMapper -->
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int"/>
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string"/>
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <!-- Same data source as 3. This is for regular detections-->
+            <DataSource ID="DS" TypeID="F12.CheckFileContent.DS.PropertyBag" >
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+            </DataSource>
+            <!-- We want a probe for on demand detection. The ability to use recalucalte health outside of the scheduler \ DS -->
+            <ProbeAction ID="Probe" TypeID="F12.CheckFileContent.Probe" >
+            </ProbeAction>
+            <!-- Condition Detections to determine health states -->
+            <!-- Healthy -->
+            <ConditionDetection ID="FilterUnderThreshold" TypeID="System!System.ExpressionFilter" >
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileContent']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>OK</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+
+            <!-- Condition Detections to determine health states -->
+            <!-- Warning -->
+            <ConditionDetection ID="FilterOverWarningThreshold" TypeID="System!System.ExpressionFilter" >
+              <Expression>
+                    <SimpleExpression>
+                      <ValueExpression>
+                        <XPathQuery Type="Integer">Property[@Name='FileContent']</XPathQuery>
+                      </ValueExpression>
+                      <Operator>Equal</Operator>
+                      <ValueExpression>
+                        <Value>NoFile</Value>
+                      </ValueExpression>
+                    </SimpleExpression>
+                  </Expression>
+            </ConditionDetection>
+
+
+            <!-- Condition Detections to determine health states -->
+            <!-- Error -->
+            <ConditionDetection ID="FilterOverErrorThreshold" TypeID="System!System.ExpressionFilter" >
+              <Expression>
+                <SimpleExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="Integer">Property[@Name='FileContent']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>Equal</Operator>
+                  <ValueExpression>
+                    <Value>ADFS</Value>
+                  </ValueExpression>
+                </SimpleExpression>
+              </Expression>
+            </ConditionDetection>
+          </MemberModules>
+          <!-- REGULAR DETECTIONS -->
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="FilterUnderThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="OverWarningThreshold">
+              <Node ID="FilterOverWarningThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="OverErrorThreshold">
+              <Node ID="FilterOverErrorThreshold">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+
+          <!-- ON DEMAND DETECTIONS -->
+          <OnDemandDetections>
+            <OnDemandDetection MonitorTypeStateID="UnderThreshold">
+              <Node ID="FilterUnderThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+
+            <OnDemandDetection MonitorTypeStateID="OverWarningThreshold">
+              <Node ID="FilterOverWarningThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+
+            <OnDemandDetection MonitorTypeStateID="OverErrorThreshold">
+              <Node ID="FilterOverErrorThreshold">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+          </OnDemandDetections>
+
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+</ManagementPackFragment>

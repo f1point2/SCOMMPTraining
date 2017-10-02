@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <ProjectGuid>{33f52e3d-2d4a-4ab0-9008-bc9716ae2697}</ProjectGuid>
+    <RootNamespace>PShellFileContentsCheck2State</RootNamespace>
+    <Name>PShell File Contents Check 2 State</Name>
+    <ManagementPackName>PShellFileContentsCheck2State</ManagementPackName>
+    <Version>1.0.0.0</Version>
+    <MpFrameworkVersion>v7.0.2</MpFrameworkVersion>
+    <MpFrameworkProfile>OM</MpFrameworkProfile>
+    <ProductVersion>1.1.0.0</ProductVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\Management Pack References</OutputPath>
+    <GenerateSealed>True</GenerateSealed>
+    <Company>F1Point2</Company>
+    <Copyright>Copyright (c) F1Point2. All rights reserved.</Copyright>
+    <DelaySigning>False</DelaySigning>
+    <AssemblyOriginatorKeyFile>..\Management Pack References\F12Key.snk</AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <DelaySigning>false</DelaySigning>
+    <Company>MyCompany</Company>
+    <Copyright>Copyright (c) MyCompany. All rights reserved.</Copyright>
+    <DelaySign>false</DelaySign>
+    <AssemblyOriginatorKeyFile />
+  </PropertyGroup>
+  <ItemGroup>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Library">
+      <Alias>SC</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.Windows.Library">
+      <Alias>Windows</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Health.Library">
+      <Alias>Health</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="System.Library">
+      <Alias>System</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+    <ManagementPackReference Include="Microsoft.SystemCenter.Visualization.Library">
+      <Alias>Visualization</Alias>
+      <PackageToBundle>false</PackageToBundle>
+    </ManagementPackReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ClassAndDiscoveries" />
+    <Folder Include="Monitoring" />
+    <Folder Include="Monitoring\Monitors" />
+    <Folder Include="Monitoring\Monitors\FileCheck2State" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ClassAndDiscoveries\ApplicationClassAndDiscovery.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ManagementPack.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\FileCheck2State\2_Probe.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\FileCheck2State\3_DS.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\FileCheck2State\4_MonitorType.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Monitoring\Monitors\FileCheck2State\5_Monitor.mpx">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Monitoring\Monitors\FileCheck2State\1_PShellScript.ps1" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Microsoft\VSAC\Microsoft.SystemCenter.OperationsManager.targets" />
+</Project>

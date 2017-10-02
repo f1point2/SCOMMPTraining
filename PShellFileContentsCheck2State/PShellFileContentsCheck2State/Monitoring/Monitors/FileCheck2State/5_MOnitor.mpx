@@ -1,0 +1,58 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Monitoring>
+    <Monitors>
+      <UnitMonitor ID="F12.Monitor.Unit.CheckFileContent" Accessibility="Public" Enabled="true" Target="F12.MyLogFileApp.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="F12.CheckFileContent.MonitorType" ConfirmDelivery="false">
+        <Category>PerformanceHealth</Category>
+        <AlertSettings AlertMessage="F12.Monitor.Unit.CheckFileContent.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+                    <AlertParameters>
+            <AlertParameter1>$Data/Context/FileContent$</AlertParameter1>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="UnderThreshold" MonitorTypeStateID="UnderThreshold" HealthState="Success" />
+          <OperationalState ID="OverWarningThreshold" MonitorTypeStateID="OverWarningThreshold" HealthState="Warning" />
+          <OperationalState ID="OverErrorThreshold" MonitorTypeStateID="OverErrorThreshold" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+   <SyncTime />
+          <IntervalSeconds>60</IntervalSeconds>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <StringResources>
+      <StringResource ID="F12.Monitor.Unit.CheckFileContent.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent">
+          <Name>Check File Content</Name>
+          <Description>Description for the new unit monitor.</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent.AlertMessage">
+          <Name>File Content Found</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent" SubElementID="UnderThreshold">
+          <Name>File Content OK</Name>
+          <Description>OK</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent" SubElementID="OverWarningThreshold">
+          <Name>No File Found</Name>
+          <Description>The file was not found</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.Monitor.Unit.CheckFileContent" SubElementID="OverErrorThreshold">
+          <Name>File Content shows Error</Name>
+          <Description>Value = {0}</Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>
