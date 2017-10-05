@@ -1,0 +1,17 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <SecureReferences>
+      <SecureReference ID="F12.FTPMonitoring.RunAsProfile" Accessibility="Public" Context="System!System.Entity" />
+    </SecureReferences>
+  </TypeDefinitions>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="F12.FTPMonitoring.RunAsProfile">
+          <Name>Run As Profile – FTP Remote Check</Name>
+          <Description>This run as profile is for the remote FTP Check</Description>
+        </DisplayString>
+      </DisplayStrings>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPackFragment>

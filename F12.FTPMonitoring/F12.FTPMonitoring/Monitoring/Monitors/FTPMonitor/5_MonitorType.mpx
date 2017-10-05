@@ -1,0 +1,135 @@
+﻿<ManagementPackFragment SchemaVersion="2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <TypeDefinitions>
+    <MonitorTypes>
+      <UnitMonitorType ID="F12.FTPMonitoring.MonitorType" Accessibility="Internal" >
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Equal226" NoDetection="false"/>
+          <MonitorTypeState ID="NotEqual226" NoDetection="false"/>
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element minOccurs="1" name="FTPPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+          <xsd:element name="Interval" type="xsd:int"/>
+          <xsd:element name="Count" type="xsd:int"/>
+          <xsd:element name="From" type="xsd:string"/>
+          <xsd:element name="To" type="xsd:string"/>
+          <xsd:element name="Days" type="xsd:int"/>
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int"/>
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string"/>
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="Count" Selector="$Config/Count$" ParameterType="int" />
+          <OverrideableParameter ID="From" Selector="$Config/From$" ParameterType="string" />
+          <OverrideableParameter ID="To" Selector="$Config/To$" ParameterType="string" />
+          <OverrideableParameter ID="Days" Selector="$Config/Days$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>     
+            <DataSource ID="DS" TypeID="F12.FTPMonitoring.DS.PropertyBag" >
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <FTPPath>$Config/FTPPath$</FTPPath>
+            </DataSource>
+            <!-- We want a probe for on demand detection. The ability to use recalucalte health outside of the scheduler \ DS -->
+            <ProbeAction ID="Probe" TypeID="F12.FTPMonitoring.Probe" >
+              <FTPPath>$Config/FTPPath$</FTPPath>
+            </ProbeAction>
+            <!-- Condition Detections to determine health states -->
+            <!-- Healthy -->
+            <ConditionDetection TypeID="System!System.ConsolidatorCondition" ID="RepeatCount">
+              <Consolidator>
+                <ConsolidationProperties />
+                <StoreState>false</StoreState>
+                <TimeControl>
+                  <WithinTimeSchedule>
+                    <Interval>$Config/Interval$</Interval>
+                  </WithinTimeSchedule>
+                </TimeControl>
+                <CountingCondition>
+                  <Count>$Config/Count$</Count>
+                  <CountMode>OnNewItemTestOutputRestart_OnTimerSlideByOne</CountMode>
+                </CountingCondition>
+              </Consolidator>
+            </ConditionDetection>
+            <ConditionDetection ID="FilterEqual226" TypeID="System!System.ExpressionFilter" >
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='StatusDescription']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>ContainsSubstring</Operator>
+                      <Pattern>226 Transfer complete.</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+
+            <!-- Condition Detections to determine health states -->
+            <!-- Error -->
+            <ConditionDetection ID="FilterNotEqual226" TypeID="System!System.ExpressionFilter" >
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='StatusDescription']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>DoesNotContainSubstring</Operator>
+                    <Pattern>226 Transfer complete.</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.SchedulerFilter">
+              <SchedulerFilter>
+                <ProcessDataMode>OnSchedule</ProcessDataMode>
+                <Schedule>
+                  <WeeklySchedule>
+                    <Windows>
+                      <Daily>
+                        <Start>$Config/From$</Start>
+                        <End>$Config/To$</End>
+                        <DaysOfWeekMask>$Config/Days$</DaysOfWeekMask>
+                      </Daily>
+                    </Windows>
+                  </WeeklySchedule>
+                  <ExcludeDates />
+                </Schedule>
+                <UseCurrentTime>true</UseCurrentTime>
+              </SchedulerFilter>
+            </ConditionDetection>
+          </MemberModules>
+          <!-- REGULAR DETECTIONS -->
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Equal226">
+              <Node ID="FilterEqual226">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="NotEqual226">
+              <Node ID="FilterNotEqual226">
+                <Node ID="Filter">
+                  <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+
+          <!-- ON DEMAND DETECTIONS -->
+          <OnDemandDetections>
+            <OnDemandDetection MonitorTypeStateID="Equal226">
+              <Node ID="FilterEqual226">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+
+            <OnDemandDetection MonitorTypeStateID="NotEqual226">
+              <Node ID="FilterNotEqual226">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+          </OnDemandDetections>
+
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+</ManagementPackFragment>

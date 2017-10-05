@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ManagementPack SchemaVersion="2.0" ContentReadable="true" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Manifest>
+    <Identity>
+      <ID>F12.FTPMonitoring</ID>
+      <Version>1.0.0.35</Version>
+    </Identity>
+    <Name>F12 FTP Monitoring</Name>
+    <References>
+      <Reference Alias="SC">
+        <ID>Microsoft.SystemCenter.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Windows">
+        <ID>Microsoft.Windows.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="Health">
+        <ID>System.Health.Library</ID>
+        <Version>7.0.8433.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+      <Reference Alias="System">
+        <ID>System.Library</ID>
+        <Version>7.5.8501.0</Version>
+        <PublicKeyToken>31bf3856ad364e35</PublicKeyToken>
+      </Reference>
+    </References>
+  </Manifest>
+  <TypeDefinitions>
+    <EntityTypes>
+      <ClassTypes>
+        <ClassType ID="F12.FTPMonitoring.AppServer" Base="Windows!Microsoft.Windows.ComputerRole" Accessibility="Public" Abstract="false" Hosted="true" Singleton="false">
+          <Property ID="FTPPath" Key="false" Type="string" />
+        </ClassType>
+      </ClassTypes>
+    </EntityTypes>
+    <SecureReferences>
+      <SecureReference ID="F12.FTPMonitoring.RunAsProfile" Accessibility="Public" Context="System!System.Entity" />
+    </SecureReferences>
+    <ModuleTypes>
+      <DataSourceModuleType ID="F12.FTPMonitoring.DS.PropertyBag" Accessibility="Internal">
+        <Configuration>
+          <!-- Need configuration elements for the scheduler -->
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element minOccurs="1" name="FTPPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <DataSource ID="Schedule" TypeID="System!System.SimpleScheduler">
+                <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+                <SyncTime>$Config/SyncTime$</SyncTime>
+              </DataSource>
+              <ProbeAction ID="Script" TypeID="F12.FTPMonitoring.Probe">
+                <FTPPath>$Config/FTPPath$</FTPPath>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script">
+                <Node ID="Schedule" />
+              </Node>
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+      </DataSourceModuleType>
+      <ProbeActionModuleType ID="F12.FTPMonitoring.Probe" Accessibility="Internal">
+        <!-- List of Parameters that module expects e.g. Folder-->
+        <Configuration>
+          <xsd:element minOccurs="1" name="FTPPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <!-- We don't want the end user to change the folder in this case -->
+        </OverrideableParameters>
+        <ModuleImplementation>
+          <Composite>
+            <MemberModules>
+              <!-- These are the modules that make up the module, the composition section is where we state the order they run -->
+              <!-- Trigger only probe means it doesn't require any incoming data e.g. use for On Demand Detection-->
+              <ProbeAction ID="Script" TypeID="Windows!Microsoft.Windows.PowerShellPropertyBagTriggerOnlyProbe">
+                <ScriptName>FTPCheck.ps1</ScriptName>
+                <ScriptBody><![CDATA[param($FTPPath)
+
+$api=new-Object -comObject "MOM.ScriptAPI"
+$bag= $api.CreatePropertyBag()
+ 
+$Request=[System.Net.WebRequest]::Create($FTPPath)
+ 
+$Request.Method = [System.Net.WebRequestMethods+Ftp]::ListDirectoryDetails
+ 
+$Request.Credentials = New-Object System.Net.NetworkCredential $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/UserName$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Password$
+ 
+$Request.KeepAlive=0
+ 
+$Request.UseBinary=1
+ 
+$Response = $Request.GetResponse()
+ 
+$ResponseStream=$Response.GetResponseStream()
+ 
+$Reader = New-Object System.Io.StreamReader $ResponseStream
+ 
+[System.Console]::Writeline($Reader.ReadToEnd())
+ 
+$bag.AddValue("StatusDescription", $Response.StatusDescription)
+
+$bag
+
+$Reader.Close()
+$Response.Close()]]></ScriptBody>
+                <Parameters>
+                  <Parameter>
+                    <Name>FTPPath</Name>
+                    <Value>$Config/FTPPath$</Value>
+                  </Parameter>
+                </Parameters>
+                <TimeoutSeconds>120</TimeoutSeconds>
+              </ProbeAction>
+            </MemberModules>
+            <Composition>
+              <Node ID="Script" />
+            </Composition>
+          </Composite>
+        </ModuleImplementation>
+        <OutputType>System!System.PropertyBagData</OutputType>
+        <TriggerOnly>true</TriggerOnly>
+      </ProbeActionModuleType>
+    </ModuleTypes>
+    <MonitorTypes>
+      <UnitMonitorType ID="F12.FTPMonitoring.MonitorType" Accessibility="Internal">
+        <MonitorTypeStates>
+          <MonitorTypeState ID="Equal226" NoDetection="false" />
+          <MonitorTypeState ID="NotEqual226" NoDetection="false" />
+        </MonitorTypeStates>
+        <Configuration>
+          <xsd:element name="SyncTime" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="IntervalSeconds" type="xsd:integer" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element minOccurs="1" name="FTPPath" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Interval" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Count" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="From" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="To" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+          <xsd:element name="Days" type="xsd:int" xmlns:xsd="http://www.w3.org/2001/XMLSchema" />
+        </Configuration>
+        <OverrideableParameters>
+          <OverrideableParameter ID="IntervalSeconds" Selector="$Config/IntervalSeconds$" ParameterType="int" />
+          <OverrideableParameter ID="SyncTime" Selector="$Config/SyncTime$" ParameterType="string" />
+          <OverrideableParameter ID="Interval" Selector="$Config/Interval$" ParameterType="int" />
+          <OverrideableParameter ID="Count" Selector="$Config/Count$" ParameterType="int" />
+          <OverrideableParameter ID="From" Selector="$Config/From$" ParameterType="string" />
+          <OverrideableParameter ID="To" Selector="$Config/To$" ParameterType="string" />
+          <OverrideableParameter ID="Days" Selector="$Config/Days$" ParameterType="int" />
+        </OverrideableParameters>
+        <MonitorImplementation>
+          <MemberModules>
+            <DataSource ID="DS" TypeID="F12.FTPMonitoring.DS.PropertyBag">
+              <IntervalSeconds>$Config/IntervalSeconds$</IntervalSeconds>
+              <SyncTime>$Config/SyncTime$</SyncTime>
+              <FTPPath>$Config/FTPPath$</FTPPath>
+            </DataSource>
+            <!-- We want a probe for on demand detection. The ability to use recalucalte health outside of the scheduler \ DS -->
+            <ProbeAction ID="Probe" TypeID="F12.FTPMonitoring.Probe">
+              <FTPPath>$Config/FTPPath$</FTPPath>
+            </ProbeAction>
+            <!-- Condition Detections to determine health states -->
+            <!-- Healthy -->
+            <ConditionDetection TypeID="System!System.ConsolidatorCondition" ID="RepeatCount">
+              <Consolidator>
+                <ConsolidationProperties />
+                <StoreState>false</StoreState>
+                <TimeControl>
+                  <WithinTimeSchedule>
+                    <Interval>$Config/Interval$</Interval>
+                  </WithinTimeSchedule>
+                </TimeControl>
+                <CountingCondition>
+                  <Count>$Config/Count$</Count>
+                  <CountMode>OnNewItemTestOutputRestart_OnTimerSlideByOne</CountMode>
+                </CountingCondition>
+              </Consolidator>
+            </ConditionDetection>
+            <ConditionDetection ID="FilterEqual226" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='StatusDescription']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>ContainsSubstring</Operator>
+                  <Pattern>226 Transfer complete.</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+            <!-- Condition Detections to determine health states -->
+            <!-- Error -->
+            <ConditionDetection ID="FilterNotEqual226" TypeID="System!System.ExpressionFilter">
+              <Expression>
+                <RegExExpression>
+                  <ValueExpression>
+                    <XPathQuery Type="String">Property[@Name='StatusDescription']</XPathQuery>
+                  </ValueExpression>
+                  <Operator>DoesNotContainSubstring</Operator>
+                  <Pattern>226 Transfer complete.</Pattern>
+                </RegExExpression>
+              </Expression>
+            </ConditionDetection>
+            <ConditionDetection ID="Filter" TypeID="System!System.SchedulerFilter">
+              <SchedulerFilter>
+                <ProcessDataMode>OnSchedule</ProcessDataMode>
+                <Schedule>
+                  <WeeklySchedule>
+                    <Windows>
+                      <Daily>
+                        <Start>$Config/From$</Start>
+                        <End>$Config/To$</End>
+                        <DaysOfWeekMask>$Config/Days$</DaysOfWeekMask>
+                      </Daily>
+                    </Windows>
+                  </WeeklySchedule>
+                  <ExcludeDates />
+                </Schedule>
+                <UseCurrentTime>true</UseCurrentTime>
+              </SchedulerFilter>
+            </ConditionDetection>
+          </MemberModules>
+          <!-- REGULAR DETECTIONS -->
+          <RegularDetections>
+            <RegularDetection MonitorTypeStateID="Equal226">
+              <Node ID="FilterEqual226">
+                <Node ID="DS" />
+              </Node>
+            </RegularDetection>
+            <RegularDetection MonitorTypeStateID="NotEqual226">
+              <Node ID="FilterNotEqual226">
+                <Node ID="Filter">
+                  <Node ID="DS" />
+                </Node>
+              </Node>
+            </RegularDetection>
+          </RegularDetections>
+          <!-- ON DEMAND DETECTIONS -->
+          <OnDemandDetections>
+            <OnDemandDetection MonitorTypeStateID="Equal226">
+              <Node ID="FilterEqual226">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+            <OnDemandDetection MonitorTypeStateID="NotEqual226">
+              <Node ID="FilterNotEqual226">
+                <Node ID="Probe" />
+              </Node>
+            </OnDemandDetection>
+          </OnDemandDetections>
+        </MonitorImplementation>
+      </UnitMonitorType>
+    </MonitorTypes>
+  </TypeDefinitions>
+  <Monitoring>
+    <Discoveries>
+      <Discovery ID="F12.FTPMonitoring.AppServer.Discovery" Target="Windows!Microsoft.Windows.Server.OperatingSystem" Enabled="true" ConfirmDelivery="false" Remotable="true" Priority="Normal">
+        <Category>Discovery</Category>
+        <DiscoveryTypes>
+          <DiscoveryClass TypeID="F12.FTPMonitoring.AppServer" />
+        </DiscoveryTypes>
+        <DataSource ID="DS" TypeID="Windows!Microsoft.Windows.FilteredRegistryDiscoveryProvider">
+          <ComputerName>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</ComputerName>
+          <RegistryAttributeDefinitions>
+            <RegistryAttributeDefinition>
+              <!-- 
+PathType - Integer
+  Specifies whether the path is a key or a value.
+  • 0—Specifies that the path is to a key, for which the existence of the key should be checked.
+  • 1—Specifies that the path is to a value that should be retrieved.
+
+AttributeType -   Integer
+  The data type of the value to return:
+  • 0—Boolean
+  • 1—String
+  • 2—Integer
+  • 3—Float
+Values 1, 2, and 3 are used only when the PathType is set to 1.
+-->
+              <AttributeName>SeedExists</AttributeName>
+              <Path>SOFTWARE\SCOMDiscoveryData\FTPCheck</Path>
+              <PathType>0</PathType>
+              <AttributeType>0</AttributeType>
+            </RegistryAttributeDefinition>
+            <RegistryAttributeDefinition>
+              <AttributeName>Version</AttributeName>
+              <Path>SOFTWARE\SCOMDiscoveryData\FTPMonitoring\FTPath</Path>
+              <PathType>1</PathType>
+              <AttributeType>1</AttributeType>
+            </RegistryAttributeDefinition>
+          </RegistryAttributeDefinitions>
+          <Frequency>3600</Frequency>
+          <ClassId>$MPElement[Name="F12.FTPMonitoring.AppServer"]$</ClassId>
+          <InstanceSettings>
+            <Settings>
+              <Setting>
+                <Name>$MPElement[Name="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Name>
+                <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="System!System.Entity"]/DisplayName$</Name>
+                <Value>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</Value>
+              </Setting>
+              <Setting>
+                <Name>$MPElement[Name="F12.FTPMonitoring.AppServer"]/FTPPath$</Name>
+                <Value>$Data/Values/Version$</Value>
+              </Setting>
+            </Settings>
+          </InstanceSettings>
+          <Expression>
+            <SimpleExpression>
+              <ValueExpression>
+                <XPathQuery Type="String">Values/SeedExists</XPathQuery>
+              </ValueExpression>
+              <Operator>Equal</Operator>
+              <ValueExpression>
+                <Value Type="String">True</Value>
+              </ValueExpression>
+            </SimpleExpression>
+          </Expression>
+        </DataSource>
+      </Discovery>
+    </Discoveries>
+    <Monitors>
+      <UnitMonitor ID="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath" Accessibility="Public" Enabled="true" Target="F12.FTPMonitoring.AppServer" ParentMonitorID="Health!System.Health.AvailabilityState" Remotable="true" Priority="Normal" TypeID="F12.FTPMonitoring.MonitorType" ConfirmDelivery="false">
+        <Category>AvailabilityHealth</Category>
+        <AlertSettings AlertMessage="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath.AlertMessage">
+          <AlertOnState>Error</AlertOnState>
+          <AutoResolve>true</AutoResolve>
+          <AlertPriority>Normal</AlertPriority>
+          <AlertSeverity>MatchMonitorHealth</AlertSeverity>
+          <AlertParameters>
+            <AlertParameter1>$Data/Context/Property[@Name='StatusDescription']$ </AlertParameter1>
+            <AlertParameter2>$Target/Host/Property[Type="Windows!Microsoft.Windows.Computer"]/PrincipalName$</AlertParameter2>
+          </AlertParameters>
+        </AlertSettings>
+        <OperationalStates>
+          <OperationalState ID="Equal226" MonitorTypeStateID="Equal226" HealthState="Success" />
+          <OperationalState ID="NotEqual226" MonitorTypeStateID="NotEqual226" HealthState="Error" />
+        </OperationalStates>
+        <Configuration>
+          <SyncTime />
+          <IntervalSeconds>60</IntervalSeconds>
+          <FTPPath>ftp://192.168.3.153/test</FTPPath>
+          <Interval>120</Interval>
+          <Count>1</Count>
+          <From>08:00</From>
+          <To>16:00</To>
+          <Days>62</Days>
+        </Configuration>
+      </UnitMonitor>
+    </Monitors>
+  </Monitoring>
+  <Presentation>
+    <Views>
+      <View ID="F12.FTPMonitoring.Views.State" Accessibility="Internal" Target="F12.FTPMonitoring.AppServer" TypeID="SC!Microsoft.SystemCenter.StateViewType" Visible="true">
+        <Category>Operations</Category>
+      </View>
+    </Views>
+    <Folders>
+      <Folder ID="F12.FTPMonitoring.Folder" Accessibility="Public" ParentFolder="SC!Microsoft.SystemCenter.Monitoring.ViewFolder.Root" />
+    </Folders>
+    <FolderItems>
+      <FolderItem ElementID="F12.FTPMonitoring.Views.State" Folder="F12.FTPMonitoring.Folder" ID="F12.FTPMonitoring.Folder.FolderItem" />
+    </FolderItems>
+    <StringResources>
+      <StringResource ID="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath.AlertMessage" />
+    </StringResources>
+  </Presentation>
+  <LanguagePacks>
+    <LanguagePack ID="ENU" IsDefault="true">
+      <DisplayStrings>
+        <DisplayString ElementID="F12.FTPMonitoring.AppServer">
+          <Name>F12 FTPMonitoring Application Server</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.AppServer" SubElementID="FTPPath">
+          <Name>FTP Path</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.AppServer.Discovery">
+          <Name>Discover F12 FTPMonitoring Application Server</Name>
+          <Description>Description for the new discovery.</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.Folder">
+          <Name>F12 FTP Monitoring</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.Views.State">
+          <Name>State View</Name>
+          <Description></Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring">
+          <Name>F12 FTP Monitoring</Name>
+          <Description>F12 FTP Monitoring</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.RunAsProfile">
+          <Name>Run As Profile – FTP Remote Check</Name>
+          <Description>This run as profile is for the remote FTP Check</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath">
+          <Name>Check FTP Path</Name>
+          <Description>Description for the new unit monitor.</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath.AlertMessage">
+          <Name>Error Listing Directory Details</Name>
+          <Description>
+            From: {1}
+
+            FTP Path: ftp://192.168.3.153/test
+
+            Status Description: {0}
+         
+          </Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath" SubElementID="Equal226">
+          <Name>FTP Check OK</Name>
+          <Description>OK</Description>
+        </DisplayString>
+        <DisplayString ElementID="F12.FTPMonitoring.Monitor.Unit.CheckFTPPath" SubElementID="NotEqual226">
+          <Name>FTP Check Failure</Name>
+          <Description></Description>
+        </DisplayString>
+      </DisplayStrings>
+      <KnowledgeArticles></KnowledgeArticles>
+    </LanguagePack>
+  </LanguagePacks>
+</ManagementPack>
