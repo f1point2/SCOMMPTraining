@@ -11,9 +11,9 @@ $Request=[System.Net.WebRequest]::Create($FTPPath)
  
 $Request.Method = [System.Net.WebRequestMethods+Ftp]::ListDirectoryDetails
  
-$Request.Credentials = New-Object System.Net.NetworkCredential $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/UserName$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Password$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Domain$
+ $Request.Credentials = New-Object System.Net.NetworkCredential $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/UserName$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Password$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Domain$
+# $Request.Credentials = New-Object System.Net.NetworkCredential ("anonymous","here@there.com")
 
-# $Request.Credentials = New-Object System.Net.NetworkCredential::DefaultNetworkCredentials
 
 $api.logscriptevent("FTPCheck.ps1",999,0, "Script Run") 
 
