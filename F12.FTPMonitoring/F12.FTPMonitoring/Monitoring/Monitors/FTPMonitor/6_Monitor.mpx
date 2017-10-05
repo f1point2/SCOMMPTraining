@@ -24,7 +24,7 @@
           <Interval>120</Interval>
           <Count>1</Count>
           <From>08:00</From>
-          <To>16:00</To>
+          <To>22:00</To>
           <Days>62</Days>
         </Configuration>
       </UnitMonitor>

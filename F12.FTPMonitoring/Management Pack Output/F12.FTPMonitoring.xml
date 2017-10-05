@@ -3,7 +3,7 @@
   <Manifest>
     <Identity>
       <ID>F12.FTPMonitoring</ID>
-      <Version>1.0.0.35</Version>
+      <Version>1.0.0.46</Version>
     </Identity>
     <Name>F12 FTP Monitoring</Name>
     <References>
@@ -89,19 +89,30 @@
                 <ScriptName>FTPCheck.ps1</ScriptName>
                 <ScriptBody><![CDATA[param($FTPPath)
 
+
+
+
+
 $api=new-Object -comObject "MOM.ScriptAPI"
 $bag= $api.CreatePropertyBag()
- 
+
 $Request=[System.Net.WebRequest]::Create($FTPPath)
  
 $Request.Method = [System.Net.WebRequestMethods+Ftp]::ListDirectoryDetails
  
-$Request.Credentials = New-Object System.Net.NetworkCredential $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/UserName$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Password$
- 
+$Request.Credentials = New-Object System.Net.NetworkCredential $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/UserName$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Password$, $RunAs[Name="F12.FTPMonitoring.RunAsProfile"]/Domain$
+
+# $Request.Credentials = New-Object System.Net.NetworkCredential::DefaultNetworkCredentials
+
+$api.logscriptevent("FTPCheck.ps1",999,0, "Script Run") 
+
 $Request.KeepAlive=0
  
 $Request.UseBinary=1
  
+Try
+{ 
+
 $Response = $Request.GetResponse()
  
 $ResponseStream=$Response.GetResponseStream()
@@ -111,6 +122,14 @@ $Reader = New-Object System.Io.StreamReader $ResponseStream
 [System.Console]::Writeline($Reader.ReadToEnd())
  
 $bag.AddValue("StatusDescription", $Response.StatusDescription)
+
+}
+
+Catch
+{ 
+$ErrorMessage = $_.Exception.Message
+$bag.AddValue("StatusDescription", $ErrorMessage)
+}
 
 $bag
 
@@ -355,7 +374,7 @@ Values 1, 2, and 3 are used only when the PathType is set to 1.
           <Interval>120</Interval>
           <Count>1</Count>
           <From>08:00</From>
-          <To>16:00</To>
+          <To>22:00</To>
           <Days>62</Days>
         </Configuration>
       </UnitMonitor>
